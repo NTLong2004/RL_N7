@@ -16,46 +16,46 @@ import matplotlib.pyplot as plt
 # Reward shaping functions
 # =============================
 
-    # Kiểm tra tất cả các quân của player đã về đích theo thứ tự 57, 56, 55, 54
-def all_in_winner_rank(state, player):
+   # Kiểm tra tất cả các quân của token đã về đích theo thứ tự 57, 56, 55, 54
+def all_in_winner_rank(state, token):
     # Nếu state là 1 chiều (1 quân mỗi người)
-    if isinstance(state[player], (int, np.integer)):
-        return state[player] in [57, 56, 55, 54]
+    if isinstance(state[token], (int, np.integer)):
+        return state[token] in [57, 56, 55, 54]
     # Nếu state là mảng nhiều quân mỗi người
-    player_tokens = state[player]
+    token_tokens = state[token]
     required_ranks = [57, 56, 55, 54]
-    if hasattr(player_tokens, '__iter__'):
-        return sorted(player_tokens, reverse=True)[:4] == required_ranks
+    if hasattr(token_tokens, '__iter__'):
+        return sorted(token_tokens, reverse=True)[:4] == required_ranks
     else:
-        return player_tokens in required_ranks
+        return token_tokens in required_ranks
 
-def token_reached_winner_rank(state, player, action):
-    return state[player] == 57 and (state[player] - action) < 57
+def token_reached_winner_rank(state, token, action):
+    return state[token] == 57 and (state[token] - action) < 57
 
-def token_on_winner_path(state, player, action):
-    return 51 <= state[player] <= 56
+def token_on_winner_path(state, token, action):
+    return 51 <= state[token] <= 56
 
-def token_reached_safe_spot(state, player, action):
+def token_reached_safe_spot(state, token, action):
     safe_spots = [1, 9, 14, 22, 27, 35, 40, 48]
-    return state[player] in safe_spots
+    return state[token] in safe_spots
 
-def token_left_home(old_state, new_state, player, action):
-    return old_state[player] == 0 and new_state[player] != 0 and action == 6
+def token_left_home(old_state, new_state, token, action):
+    return old_state[token] == 0 and new_state[token] != 0 and action == 6
 
-def token_moved_forward(old_state, new_state, player, action):
-    return new_state[player] > old_state[player]
+def token_moved_forward(old_state, new_state, token, action):
+    return new_state[token] > old_state[token]
 
 
-def check_player_killed(old_state, new_state, current_player):
+def check_token_killed(old_state, new_state, current_token):
     safe_spots = [1, 9, 14, 22, 27, 35, 40, 48]
     killed = False
 
-    new_pos = new_state[current_player]
+    new_pos = new_state[current_token]
 
     # Chỉ kiểm tra nếu người chơi thật sự di chuyển
-    if new_pos != old_state[current_player]:
+    if new_pos != old_state[current_token]:
         for other in range(len(old_state)):
-            if other != current_player:
+            if other != current_token:
                 # Nếu vị trí mới trùng với người khác, và ô đó không an toàn → giết
                 if new_pos == new_state[other] and new_pos not in safe_spots:
                     killed = True
@@ -64,23 +64,23 @@ def check_player_killed(old_state, new_state, current_player):
     return killed
 
 
-def calculate_reward(old_state, new_state, action_taken, currentPlayer, playerKilled=False):
+def calculate_reward(old_state, new_state, action_taken, currenttoken, tokenKilled=False):
     reward = 0
-    if all_in_winner_rank(new_state, currentPlayer):
+    if all_in_winner_rank(new_state, currenttoken):
         reward += 100
-    elif token_reached_winner_rank(new_state, currentPlayer, action_taken):
+    elif token_reached_winner_rank(new_state, currenttoken, action_taken):
         reward += 50
-    if token_on_winner_path(new_state, currentPlayer, action_taken):
+    if token_on_winner_path(new_state, currenttoken, action_taken):
         reward += 25
-    if playerKilled:
+    if tokenKilled:
         reward += 20
-    if token_reached_safe_spot(new_state, currentPlayer, action_taken):
+    if token_reached_safe_spot(new_state, currenttoken, action_taken):
         reward += 10
-    if token_left_home(old_state, new_state, currentPlayer, action_taken):
+    if token_left_home(old_state, new_state, currenttoken, action_taken):
         reward += 5
-    if token_moved_forward(old_state, new_state, currentPlayer, action_taken):
+    if token_moved_forward(old_state, new_state, currenttoken, action_taken):
         reward += 1
-    if old_state[currentPlayer] == new_state[currentPlayer]:
+    if old_state[currenttoken] == new_state[currenttoken]:
         reward -= 10
     return reward
 
@@ -88,41 +88,43 @@ def calculate_reward(old_state, new_state, action_taken, currentPlayer, playerKi
 # Ludo Environment
 # =============================
 class LudoEnv:
-    def __init__(self, num_players=4):
-        self.num_players = num_players
+    def __init__(self, num_tokens=4):
+        self.num_tokens = num_tokens
         self.goal = 57
         self.reset()
 
     def reset(self):
-        self.state = [0] * self.num_players
-        self.finished_counts = [0] * self.num_players
-        self.current_player = 0
-        return self.state, self.current_player
+        self.state = [0] * self.num_tokens
+        self.finished_counts = [0] * self.num_tokens
+        self.current_token = 0
+        return self.state, self.current_token
 
     def step(self, action):
         old_state = self.state.copy()
+        print(f"token {self.current_token} is taking action {action}")
+        print(f"Old state: {old_state}")
         move = action
-        player = self.current_player
+        token = self.current_token
 
-        if self.state[player] + move <= self.goal:
-            new_pos = self.state[player] + move
+        if self.state[token] + move <= self.goal:
+            new_pos = self.state[token] + move
             if new_pos == self.goal:
-                finish_slot = self.goal - self.finished_counts[player]
+                finish_slot = self.goal - self.finished_counts[token]
                 if finish_slot < 0:
                     finish_slot = 0
-                self.state[player] = finish_slot
-                self.finished_counts[player] += 1
+                self.state[token] = finish_slot
+                self.finished_counts[token] += 1
             else:
-                self.state[player] = new_pos
+                self.state[token] = new_pos
 
-        playerKilled = check_player_killed(old_state, self.state, player)
-        reward = calculate_reward(old_state, self.state, move, player, playerKilled)
+        tokenKilled = check_token_killed(old_state, self.state, token)
+        reward = calculate_reward(old_state, self.state, move, token, tokenKilled)
 
         # Điều kiện thắng: về đích đủ 4 quân đầu tiên
-        done = self.finished_counts[player] >= 4
-        self.current_player = (self.current_player + 1) % self.num_players
+        done = self.finished_counts[token] >= 4
+        self.current_token = (self.current_token + 1) % self.num_tokens
 
-        return self.state, reward, done, player
+        return self.state, reward, done, token
 def train_all_agents(num_episodes=500):
     env = LudoEnv()
 
