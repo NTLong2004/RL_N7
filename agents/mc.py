@@ -105,7 +105,7 @@ class MonteCarloAgent:
                 self.Q[key][action] += alpha * (G - self.Q[key][action])
 
     # === Lưu và tải bằng pickle ===
-    def save(self, path="montecarlo_agent.pth"):
+    def save(self, path="montecarlo_agent.txt"):
         with open(path, "wb") as f:
             pickle.dump({
                 "Q": dict(self.Q),

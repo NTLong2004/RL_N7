@@ -1,7 +1,7 @@
-from models.pg import PolicyGradientAgent
-from models.dqn import DQNAgent
-from models.sarsa import SARSAAgent
-from models.mc import MonteCarloAgent
+from agents.pg import PolicyGradientAgent
+from agents.dqn import DQNAgent
+from agents.sarsa import SARSAAgent
+from agents.mc import MonteCarloAgent
 import numpy as np
 import random
 import tensorflow as tf
@@ -101,8 +101,6 @@ class LudoEnv:
 
     def step(self, action):
         old_state = self.state.copy()
-        print(f"token {self.current_token} is taking action {action}")
-        print(f"Old state: {old_state}")
         move = action
         token = self.current_token
 
@@ -134,17 +132,18 @@ def train_all_agents(num_episodes=500):
 
     agents = {
         "PolicyGradient": PolicyGradientAgent(state_size, action_size),
+        # "PolicyGradient": PolicyGradientAgent(state_size, action_size),
+        # "PolicyGradient": PolicyGradientAgent(state_size, action_size),
+        # "PolicyGradient": PolicyGradientAgent(state_size, action_size),
         "DQN": DQNAgent(state_size, action_size),
         "SARSA": SARSAAgent(state_size, action_size),
         "MonteCarlo": MonteCarloAgent(state_size, action_size)
     }
 
     # === Huấn luyện lần lượt ===
-    for name in ["SARSA", "MonteCarlo"]:
-        agent = agents[name]
+    for name, agent in agents.items():
         print(f"\n🚀 Đang huấn luyện tác nhân {name}...\n")
         episode_rewards = []
-
         for episode in range(num_episodes):
             state, _ = env.reset()
             total_reward = 0
@@ -170,7 +169,7 @@ def train_all_agents(num_episodes=500):
                 print(f"{name} | Episode {episode+1}/{num_episodes} | Avg Reward: {avg_r:.2f}")
 
         # Lưu model sau huấn luyện
-        save_path = f"models/{name.lower()}_agent.pth"
+        save_path = f"datatrain/{name.lower()}_agent.pth"
         agent.save(save_path)
         print(f"✅ Đã lưu mô hình {name} tại {save_path}")
 

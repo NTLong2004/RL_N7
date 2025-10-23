@@ -1,9 +1,9 @@
 import numpy as np
 
-from models.pg import PolicyGradientAgent
-from models.dqn import DQNAgent
-from models.sarsa import SARSAAgent
-from models.mc import MonteCarloAgent
+from agents.pg import PolicyGradientAgent
+from agents.dqn import DQNAgent
+from agents.sarsa import SARSAAgent
+from agents.mc import MonteCarloAgent
 
 NUM_EPISODES = 1000
 SAVE_INTERVAL = 100
@@ -92,8 +92,8 @@ class LudoEnv:
 
     def step(self, action):
         old_state = self.state.copy()
-        print(f"token {self.current_token} is taking action {action}")
-        print(f"Old state: {old_state}")
+        # print(f"token {self.current_token} is taking action {action}")
+        # print(f"Old state: {old_state}")
         move = action
         token = self.current_token
 
@@ -125,6 +125,9 @@ def train_multi_agent():
     # Khởi tạo 4 tác nhân với thuật toán khác nhau
     agents = [
         PolicyGradientAgent(state_size, action_size),
+        # PolicyGradientAgent(state_size, action_size),
+        # PolicyGradientAgent(state_size, action_size),
+        # PolicyGradientAgent(state_size, action_size)
         DQNAgent(state_size, action_size),
         SARSAAgent(state_size, action_size),
         MonteCarloAgent(state_size, action_size)
